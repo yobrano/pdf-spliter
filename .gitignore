@@ -1,0 +1,7 @@
+..gitignore
+root.bat
+__pycache__
+root/
+*.pdf
+*.csv
+test*
