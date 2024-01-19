@@ -51,8 +51,12 @@ def main(pdf_file, csv_file, no_dirs = False):
     pdf  = PdfReader(open(pdf_file, 'rb'))
     print('Pdf Loaded...\n')
 
+    print(f'{"-"*21}*{"-"*7}*{"-"*6}*') 
+    print(f'{"Name":20} | {"End":5} | {"Start":5}|') 
+    print(f'{"-"*21}|{"-"*7}|{"-"*6}*') 
     splitter(df= df, pdf= pdf, mkdir= not no_dirs)
-    print('Splitting completed successfully. Bye.')
+    print(f'{"-"*21}*{"-"*7}*{"-"*6}*') 
+    print('\nSplitting completed successfully. \nBye.')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
