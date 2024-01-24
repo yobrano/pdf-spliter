@@ -12,46 +12,44 @@ import os
 
 from PyPDF2 import PdfReader, PdfWriter
 
-
-def save_pdf(writer, name, mkdirs):
+def save_pdf(writer, name, output_dir, mkdirs):
     """Saves out the pdf splits"""
 
-    file_name = f"{name}.pdf"
-    # check wheather to create a directory or not
     if mkdirs:
-        try:
-            os.mkdir(name)
-            file_name = f"{name}/{name}.pdf"
-
-        except Exception as e:
-            # folder alreader existed
-            print(e)
-            file_name = f"{name}/{name}.pdf"
+        file_name = f"{output_dir}/{name}/{name}.pdf"
+        if not os.path.exists(f"{output_dir}/{name}"):
+            os.makedirs(f"{output_dir}/{name}")
+    else:
+        file_name = f"{output_dir}/{name}.pdf"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
     with open(file_name, "wb") as f:
+        print(file_name)
         writer.write(f)
 
 
-def split_by_row(row, pdf=None, mkdir=True, print_results= False):
+
+def split_by_row(row, pdf=None, mkdir=True, print_results= False, output_dir="."):
     """Split the pdf based on dataframe rows"""
     name, start, end = row["name"], row["start"], row["end"]
     name = name.strip()
     writer = PdfWriter()
 
     _ = [writer.add_page(pdf.pages[pg]) for pg in range(start - 1, end)]
-    save_pdf(writer, name, mkdir)
+    save_pdf(writer, name, output_dir, mkdir)
     
     if print_results:
         print(f"{name:20} | {start:5} | {end:5}|")
 
 
-def splitter(pdf, df, mkdir=True, print_results = False):
+def splitter(pdf, df, output_dir, mkdir=True, print_results = False):
     """ Use loaded files to begin spliting files."""
 
-    df.apply(split_by_row, axis=1, pdf=pdf, mkdir=mkdir, print_results=print_results )
+    df.apply(split_by_row, axis=1, pdf=pdf, mkdir=mkdir, print_results=print_results, output_dir=output_dir)
 
 
-def cli_main(pdf_file, csv_file, no_dirs=False):
+def cli_main(pdf_file, csv_file, output_dir, no_dirs=False):
     """Read in files, ie. the datafame and the pdf. Call this method when in the cli """
 
     df = pd.read_csv(csv_file)
@@ -66,18 +64,21 @@ def cli_main(pdf_file, csv_file, no_dirs=False):
     print(f'{"Name":20} | {"End":5} | {"Start":5}|')
     print(f'{"-"*21}|{"-"*7}|{"-"*6}*')
 
-    splitter(pdf, df, mkdir=not no_dirs, print_results = True)
+    splitter(pdf, df, output_dir, mkdir=not no_dirs, print_results = True)
 
     print(f'{"-"*21}*{"-"*7}*{"-"*6}*')
     print("\nSplitting completed successfully. \nBye.")
 
+    return True
 
-def gui_main(pdf_file, csv_file, no_dirs=False):
+def gui_main(pdf_file, csv_file, output_dir, mkdir=True):
     """ reads in the csv and pdf files. Call this when in the gui """
-
+    print("hello")
     with open(pdf_file, "rb") as contents:
         pdf = PdfReader(contents)
         contents.close()
 
     splits_df = pd.read_csv(csv_file)
-    splitter(pdf, splits_df, mkdir=not no_dirs)
+    splitter(pdf, splits_df, output_dir,  mkdir=mkdir)
+
+    return True

@@ -13,9 +13,15 @@ if __name__ == "__main__":
     parser.add_argument("PdfInput", help="Pass in a pdf file to be splited.")
     parser.add_argument("CsvInput", help="Pass in a Csv file with split rows.")
     parser.add_argument(
-        "--no-dirs", action="store_true", help="Don't create directories for each split"
+        "OutputDir", 
+        help="Specify where the output files will be placed."
+    )
+    parser.add_argument(
+        "--no-dirs", 
+        action="store_true", 
+        help="Don't create directories for each split"
     )
 
     args = parser.parse_args()
 
-    cli_main(args.PdfInput, args.CsvInput, no_dirs=args.no_dirs)
+    cli_main(args.PdfInput, args.CsvInput, args.OutputDir, no_dirs=args.no_dirs)

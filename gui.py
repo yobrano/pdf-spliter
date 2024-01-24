@@ -11,6 +11,7 @@ from tkinter import messagebox as mb
 from tkinter import font
 import os
 
+from splitter import gui_main
 
 
 def truncate_text(text, max_len= 25, end= "..."):
@@ -22,6 +23,7 @@ class PdfSplitterGUI:
 
     imported_pdf_path:str
     imported_splits_path:str
+    output_dir:str
     pdf_sections:list
 
     def __init__(self, root):
@@ -36,12 +38,13 @@ class PdfSplitterGUI:
         self.pdf_sections = []
         self.imported_splits_path = ""
         self.imported_pdf_path = ""
+        self.output_dir = ""
 
         self.default_font = font.nametofont('TkTextFont').actual()
         self.italic_font = f"Arial {self.default_font['size']-1} italic"
 
-        self.files_selection_frame = tk.LabelFrame(self.root)
-        self.files_selection_frame.grid(row=0, column=0)
+        self.files_selection_frame = tk.LabelFrame(self.root, text= "File Imports")
+        self.files_selection_frame.grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
 
         # Select PDF widgets
         self.select_pdf_label = tk.Label(self.files_selection_frame,
@@ -114,8 +117,32 @@ class PdfSplitterGUI:
                                          command=self.add_section)
         self.add_section_btn.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
+        # Output frame
+        self.output_frame = tk.LabelFrame(self.root, text="Split Settings")
+        self.output_frame.grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+
+        self.mk_dir_var = tk.BooleanVar(value= True)
+        self.mk_dir_check = tk.Checkbutton(self.output_frame,
+                                           text= "Make Directories",
+                                           variable=self.mk_dir_var,
+                                           onvalue=True,
+                                           offvalue=False)
+        self.mk_dir_check.grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
+
+        self.output_dir_label = tk.Label(self.output_frame, text="Output folder")
+        self.output_dir_label.grid(row=1, column=0, padx=10, pady=10, sticky=tk.W)
+
+        self.output_dir_entry = tk.Entry(self.output_frame,)
+        self.output_dir_entry.grid(row=2, column=0, padx=10, pady=10, columnspan=2, sticky=tk.W)
+
+        self.output_dir_btn = tk.Button(self.output_frame,
+                                        text="...",
+                                        command=self.select_output_dir)
+        self.output_dir_btn.grid(row=2, column=1, padx=10, pady=10, sticky=tk.W)
+
+
         self.split_pdf_btn = tk.Button(self.root, text= "Split", command= self.split_pdf)
-        self.split_pdf_btn.grid(row=2, column=0, padx=10, pady=10)
+        self.split_pdf_btn.grid(row=4, column=0, padx=10, pady=10, columnspan=2 )
 
 
     def import_splits(self,):
@@ -128,7 +155,7 @@ class PdfSplitterGUI:
         )
         self.imported_splits_path = fd.askopenfilename(
             title="Pick a valid csv file (check help).",
-            initialdir="/",
+            # initialdir="/",
             filetypes=filetypes
         )
         self.splits_path_label.config(text= truncate_text(self.imported_splits_path))
@@ -142,7 +169,7 @@ class PdfSplitterGUI:
         )
         self.imported_pdf_path = fd.askopenfilename(
             title="Pick a valid pdf file to split.",
-            initialdir="/",
+            # initialdir="/",
             filetypes=filetypes
         )
 
@@ -167,8 +194,16 @@ class PdfSplitterGUI:
             self.section_name_entry.delete(0, tk.END)
             self.section_start_entry.delete(0, tk.END)
             self.section_end_entry.delete(0, tk.END)
+
         except AssertionError as exc:
             mb.showerror(title = "Adding the section failed.", message=str(exc))
+
+
+    def select_output_dir(self):
+        """ Propts user to assign an output direction. """
+        self.output_dir = fd.askdirectory()
+        self.output_dir_entry.delete(0, tk.END)
+        self.output_dir_entry.insert(0, self.output_dir)
 
 
     def split_pdf(self,):
@@ -178,6 +213,13 @@ class PdfSplitterGUI:
         except AssertionError as exc:
             mb.showerror(title="A missing parameter", message= str(exc))
 
+        try:
+            gui_main(self.imported_pdf_path,
+                     self.imported_splits_path,
+                     self.output_dir_entry.get(),
+                     mkdir=self.mk_dir_var.get())
+        except Exception as exc:
+            mb.showerror(title="Could not split pdf", message=exc)
 
     def section_entry_validation(self, section_name, section_start, section_end):
         """ Validates the section data. """
@@ -198,10 +240,13 @@ class PdfSplitterGUI:
 
     def required_values_validation(self, ):
         """ validated that all required values before spliting are present. """
+
+        # validate the pdf file.
         assert self.imported_pdf_path != "", "No pdf file was provided. Select a pdf file."
         assert os.path.exists(self.imported_pdf_path), "The provided pdf path is invalid."
         assert self.imported_pdf_path.endswith(".pdf"), "The provided file is not of pdf format."
 
+        # validate the splits file and splits array
         if self.imported_splits_path != "":
             assert self.imported_splits_path.endswith(".csv"),\
                 "The provided file is not of csv format."
@@ -211,6 +256,21 @@ class PdfSplitterGUI:
             raise AssertionError(
                 "No sections were provided.\nCosider selecting a file or adding you own sections"
             )
+
+
+    def clear(self, ):
+        """ Return the app to default. """
+        self.pdf_sections = []
+        self.imported_splits_path = ""
+        self.imported_pdf_path = ""
+        self.output_dir = ""
+
+        self.section_name_entry.delete(0, tk.END)
+        self.section_start_entry.delete(0, tk.END)
+        self.section_end_entry.delete(0, tk.END)
+        self.mk_dir_var.set(True)
+      
+
 
 
 if __name__ == "__main__":
