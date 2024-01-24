@@ -1,14 +1,15 @@
 """
     Author: Brian Mburu
-    Date: 22/01/2024
+    Date: 24/01/2024
 
     This is gui for a pdf Splitter. 
 """
+
 import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 from tkinter import font
-
+import os
 
 
 
@@ -45,7 +46,13 @@ class PdfSplitterGUI:
         # Select PDF widgets
         self.select_pdf_label = tk.Label(self.files_selection_frame,
                                          text="Select a pdf to be splitted")
-        self.select_pdf_label.grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
+        self.select_pdf_label.grid(
+            row=0,
+            column=0,
+            padx=10,
+            pady=10,
+            sticky=tk.W
+        )
 
         self.select_pdf_btn = tk.Button(self.files_selection_frame,
                                         text="Select File",
@@ -80,7 +87,7 @@ class PdfSplitterGUI:
 
         # add split entries
         self.add_section_frame = tk.LabelFrame(self.root, text="Add a Section")
-        self.add_section_frame.grid(row=4, padx=5, pady=5, sticky=tk.W)
+        self.add_section_frame.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
 
         # Name, start and end field for the section
         self.section_name_label = tk.Label(self.add_section_frame, text="Section Name")
@@ -106,6 +113,9 @@ class PdfSplitterGUI:
                                          text="Add Section",
                                          command=self.add_section)
         self.add_section_btn.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+        self.split_pdf_btn = tk.Button(self.root, text= "Split", command= self.split_pdf)
+        self.split_pdf_btn.grid(row=2, column=0, padx=10, pady=10)
 
 
     def import_splits(self,):
@@ -147,7 +157,11 @@ class PdfSplitterGUI:
 
         try:
             self.section_entry_validation(section_name, section_start, section_end)
-            self.pdf_sections.append([section_name, int(section_start), int(section_end)])
+            self.pdf_sections.append({
+                "name": section_name,
+                "start":int(section_start),
+                "end": int(section_end)
+            })
 
             # Clear the input.
             self.section_name_entry.delete(0, tk.END)
@@ -156,6 +170,13 @@ class PdfSplitterGUI:
         except AssertionError as exc:
             mb.showerror(title = "Adding the section failed.", message=str(exc))
 
+
+    def split_pdf(self,):
+        """ Splits the imported pdf to sections outlined in the csv file and sections array. """
+        try:
+            self.required_values_validation()
+        except AssertionError as exc:
+            mb.showerror(title="A missing parameter", message= str(exc))
 
 
     def section_entry_validation(self, section_name, section_start, section_end):
@@ -174,9 +195,31 @@ class PdfSplitterGUI:
             "The section end should be larger than the section start."
         return True
 
+
+    def required_values_validation(self, ):
+        """ validated that all required values before spliting are present. """
+        assert self.imported_pdf_path != "", "No pdf file was provided. Select a pdf file."
+        assert os.path.exists(self.imported_pdf_path), "The provided pdf path is invalid."
+        assert self.imported_pdf_path.endswith(".pdf"), "The provided file is not of pdf format."
+
+        if self.imported_splits_path != "":
+            assert self.imported_splits_path.endswith(".csv"),\
+                "The provided file is not of csv format."
+            assert os.path.exists(self.imported_splits_path),\
+                "The provided csv path is invalid."
+        elif self.imported_splits_path == "" and len(self.pdf_sections) == 0:
+            raise AssertionError(
+                "No sections were provided.\nCosider selecting a file or adding you own sections"
+            )
+
+
 if __name__ == "__main__":
     main_root = tk.Tk()
     main_root.title("PdfSplitter")
-    
     pdf_splitter_gui = PdfSplitterGUI(main_root)
     main_root.mainloop()
+
+
+# ideas:
+# Grid manager for the widgets
+    # -> grid.col()  will increment the column and return its value before the increment.
