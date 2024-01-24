@@ -6,16 +6,15 @@
     It has both a cli and a gui.
 """
 
-import csv
-import pandas as pd
 import os
+import pandas as pd
 
 from PyPDF2 import PdfReader, PdfWriter
 
-def save_pdf(writer, name, output_dir, mkdirs):
+def save_pdf(writer, name, output_dir, mkdir):
     """Saves out the pdf splits"""
 
-    if mkdirs:
+    if mkdir:
         file_name = f"{output_dir}/{name}/{name}.pdf"
         if not os.path.exists(f"{output_dir}/{name}"):
             os.makedirs(f"{output_dir}/{name}")
@@ -25,7 +24,6 @@ def save_pdf(writer, name, output_dir, mkdirs):
             os.makedirs(output_dir)
 
     with open(file_name, "wb") as f:
-        print(file_name)
         writer.write(f)
 
 
@@ -73,12 +71,11 @@ def cli_main(pdf_file, csv_file, output_dir, no_dirs=False):
 
 def gui_main(pdf_file, csv_file, output_dir, mkdir=True):
     """ reads in the csv and pdf files. Call this when in the gui """
-    print("hello")
+    splits_df = pd.read_csv(csv_file)
+
     with open(pdf_file, "rb") as contents:
         pdf = PdfReader(contents)
-        contents.close()
+        splitter(pdf, splits_df, output_dir,  mkdir=mkdir)
 
-    splits_df = pd.read_csv(csv_file)
-    splitter(pdf, splits_df, output_dir,  mkdir=mkdir)
 
     return True

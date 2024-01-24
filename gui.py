@@ -5,11 +5,11 @@
     This is gui for a pdf Splitter. 
 """
 
+import os
 import tkinter as tk
+from tkinter import font
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
-from tkinter import font
-import os
 
 from splitter import gui_main
 
@@ -214,10 +214,18 @@ class PdfSplitterGUI:
             mb.showerror(title="A missing parameter", message= str(exc))
 
         try:
-            gui_main(self.imported_pdf_path,
+            _ = gui_main(self.imported_pdf_path,
                      self.imported_splits_path,
                      self.output_dir_entry.get(),
-                     mkdir=self.mk_dir_var.get())
+                     mkdir= self.mk_dir_var.get())
+
+            if _:
+                mb.showinfo(
+                    title="Successful",
+                    message="The pdf has been split successfully."
+                )
+                self.clear()
+
         except Exception as exc:
             mb.showerror(title="Could not split pdf", message=exc)
 
@@ -265,12 +273,13 @@ class PdfSplitterGUI:
         self.imported_pdf_path = ""
         self.output_dir = ""
 
+        self.pdf_path_label.config(text="* No file is selected.")
+        self.splits_path_label.config(text="* No file is selected.")
         self.section_name_entry.delete(0, tk.END)
         self.section_start_entry.delete(0, tk.END)
         self.section_end_entry.delete(0, tk.END)
         self.mk_dir_var.set(True)
-      
-
+        self.output_dir_entry.delete(0, tk.END)
 
 
 if __name__ == "__main__":
