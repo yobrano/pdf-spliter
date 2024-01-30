@@ -7,6 +7,7 @@
 """
 
 import os
+import random
 import pandas as pd
 
 from PyPDF2 import PdfReader, PdfWriter
@@ -36,15 +37,9 @@ def split_by_row(row, pdf=None, mkdir=True, print_results= False, output_dir="."
 
     _ = [writer.add_page(pdf.pages[pg]) for pg in range(start - 1, end)]
     save_pdf(writer, name, output_dir, mkdir)
-    
+
     if print_results:
         print(f"{name:20} | {start:5} | {end:5}|")
-
-
-def splitter(pdf, df, output_dir, mkdir=True, print_results = False):
-    """ Use loaded files to begin spliting files."""
-
-    df.apply(split_by_row, axis=1, pdf=pdf, mkdir=mkdir, print_results=print_results, output_dir=output_dir)
 
 
 def cli_main(pdf_file, csv_file, output_dir, no_dirs=False):
@@ -62,20 +57,46 @@ def cli_main(pdf_file, csv_file, output_dir, no_dirs=False):
     print(f'{"Name":20} | {"End":5} | {"Start":5}|')
     print(f'{"-"*21}|{"-"*7}|{"-"*6}*')
 
-    splitter(pdf, df, output_dir, mkdir=not no_dirs, print_results = True)
-
+    df.apply(
+        split_by_row,
+        axis=1,
+        pdf=pdf,
+        mkdir=not no_dirs,
+        output_dir=output_dir,
+        print_results=True,
+    )
     print(f'{"-"*21}*{"-"*7}*{"-"*6}*')
     print("\nSplitting completed successfully. \nBye.")
 
     return True
 
-def gui_main(pdf_file, csv_file, output_dir, mkdir=True):
+def gui_main(pdf_file, csv_file, additional_sections, output_dir, mkdir=True):
     """ reads in the csv and pdf files. Call this when in the gui """
-    splits_df = pd.read_csv(csv_file)
+    df = pd.read_csv(csv_file)
+
+    if additional_sections:
+        _df = pd.DataFrame(additional_sections)
+        df = pd.concat([df, _df])
 
     with open(pdf_file, "rb") as contents:
         pdf = PdfReader(contents)
-        splitter(pdf, splits_df, output_dir,  mkdir=mkdir)
+        df.apply(
+            split_by_row,
+            axis=1,
+            pdf=pdf,
+            mkdir=mkdir,
+            output_dir=output_dir,
+            print_results=True,
+        )
+        file_name = os.path.basename(pdf_file).split(".")[0]
+        file_path = f"{output_dir}/{file_name}-splits.csv"
 
+        while True:
+            if os.path.exists(file_path):
+                file_path = f"{output_dir}/{file_name}-splits({random.randint(0, 10000)}).csv"
+            else:
+                break
+
+        df.to_csv(file_path, index=False)
 
     return True

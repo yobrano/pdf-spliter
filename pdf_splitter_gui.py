@@ -216,6 +216,7 @@ class PdfSplitterGUI:
         try:
             _ = gui_main(self.imported_pdf_path,
                      self.imported_splits_path,
+                     self.pdf_sections,
                      self.output_dir_entry.get(),
                      mkdir= self.mk_dir_var.get())
 
@@ -228,6 +229,7 @@ class PdfSplitterGUI:
 
         except Exception as exc:
             mb.showerror(title="Could not split pdf", message=exc)
+
 
     def section_entry_validation(self, section_name, section_start, section_end):
         """ Validates the section data. """

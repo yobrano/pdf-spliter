@@ -18,7 +18,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--no-dirs", 
-        action="store_true", 
+        action="store_true",
         help="Don't create directories for each split"
     )
 
